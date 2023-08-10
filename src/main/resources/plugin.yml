@@ -1,3 +1,4 @@
+depend: [MafanaMarket]
 name: MafanaBank
 version: '${project.version}'
 main: me.tahacheji.mafananetwork.MafanaBank

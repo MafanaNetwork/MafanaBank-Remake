@@ -1,6 +1,7 @@
 package me.tahacheji.mafananetwork.data;
 
 import de.tr7zw.nbtapi.NBTItem;
+import me.TahaCheji.MainStash;
 import me.TahaCheji.mysqlData.MySQL;
 import me.TahaCheji.mysqlData.MysqlValue;
 import me.TahaCheji.mysqlData.SQLGetter;
@@ -77,10 +78,14 @@ public class GamePlayerBank extends MySQL {
 
     public void withdrawFromAccount(OfflinePlayer offlinePlayer, int i) {
         if (offlinePlayer.isOnline()) {
-            if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CardNumbers").equalsIgnoreCase(getCreditCardNumber(offlinePlayer))) {
-                if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CVS").equalsIgnoreCase(getCreditCardCVS(offlinePlayer))) {
-                    offlinePlayer.getPlayer().sendMessage(ChatColor.RED + "MafanaBank: CARD_NOT_ACTIVE");
-                    return;
+            if (offlinePlayer.getPlayer().getInventory().getItemInHand().getItemMeta() != null) {
+                if (new NBTItem(offlinePlayer.getPlayer().getItemInHand()).hasTag("CardNumbers")) {
+                    if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CardNumbers").equalsIgnoreCase(getCreditCardNumber(offlinePlayer))) {
+                        if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CVS").equalsIgnoreCase(getCreditCardCVS(offlinePlayer))) {
+                            offlinePlayer.getPlayer().sendMessage(ChatColor.RED + "MafanaBank: CARD_NOT_ACTIVE");
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -98,10 +103,14 @@ public class GamePlayerBank extends MySQL {
 
     public void depositIntoAccount(OfflinePlayer offlinePlayer, int i) {
         if (offlinePlayer.isOnline()) {
-            if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CardNumbers").equalsIgnoreCase(getCreditCardNumber(offlinePlayer))) {
-                if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CVS").equalsIgnoreCase(getCreditCardCVS(offlinePlayer))) {
-                    offlinePlayer.getPlayer().sendMessage(ChatColor.RED + "MafanaBank: CARD_NOT_ACTIVE");
-                    return;
+            if (offlinePlayer.getPlayer().getInventory().getItemInHand().getItemMeta() != null) {
+                if (new NBTItem(offlinePlayer.getPlayer().getItemInHand()).hasTag("CardNumbers")) {
+                    if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CardNumbers").equalsIgnoreCase(getCreditCardNumber(offlinePlayer))) {
+                        if (!new NBTItem(offlinePlayer.getPlayer().getItemInHand()).getString("CVS").equalsIgnoreCase(getCreditCardCVS(offlinePlayer))) {
+                            offlinePlayer.getPlayer().sendMessage(ChatColor.RED + "MafanaBank: CARD_NOT_ACTIVE");
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -190,7 +199,8 @@ public class GamePlayerBank extends MySQL {
     public void removeLoanAmount(OfflinePlayer player, int i) {
         sqlGetter.setInt(new MysqlValue("LOAN_AMOUNT", player.getUniqueId(), getLoanAmount(player) - i));
         MafanaBank.getInstance().getGamePlayerBank().addTransaction(player, i, TransactionType.PAYLOAN);
-        if(getLoanAmount(player) <= 0) {
+        MafanaBank.getInstance().getGamePlayerCoins().removeCoins(player, i);
+        if (getLoanAmount(player) <= 0) {
             setLoanAmount(player, 0);
             setLoanDays(player, 0);
             pickUpCollateral(player.getPlayer());
@@ -217,7 +227,6 @@ public class GamePlayerBank extends MySQL {
         }
         return playersWithLoans;
     }
-
 
 
     public Integer getLoanDays(OfflinePlayer offlinePlayer) {
@@ -283,7 +292,7 @@ public class GamePlayerBank extends MySQL {
 
     public void pickUpCollateral(Player player) {
         List<ItemStack> items = new ArrayList<>(getCollateral(player));
-        if (items.size() == 0) {
+        if (items.isEmpty()) {
             player.sendMessage("No items in your collateral");
             return;
         }
@@ -291,13 +300,9 @@ public class GamePlayerBank extends MySQL {
             List<ItemStack> itemsToRemove = new ArrayList<>();
 
             for (ItemStack itemStack : items) {
-                if (!player.getInventory().isEmpty()) {
-                    player.getInventory().addItem(itemStack);
-                    player.sendMessage(ChatColor.GREEN + "+" + itemStack.getItemMeta().getDisplayName() + " x" + itemStack.getAmount());
-                    itemsToRemove.add(itemStack);
-                } else {
-                    player.getWorld().dropItem(player.getLocation(), itemStack);
-                }
+                player.getInventory().addItem(itemStack);
+                player.sendMessage(ChatColor.GREEN + "+" + itemStack.getItemMeta().getDisplayName() + " x" + itemStack.getAmount());
+                itemsToRemove.add(itemStack);
             }
 
             Iterator<ItemStack> iterator = items.iterator();
@@ -347,7 +352,7 @@ public class GamePlayerBank extends MySQL {
         int[] cvs = {new RandomUtil().getRandom(1, 9), new RandomUtil().getRandom(1, 9), new RandomUtil().getRandom(1, 9)};
         sqlGetter.setString(new MysqlValue("CREDIT_CARD_NUMBER", player.getUniqueId(), generateFormattedCreditCardNumber()));
         sqlGetter.setString(new MysqlValue("CREDIT_CARD_CVS", player.getUniqueId(), "" + cvs[0] + cvs[1] + cvs[2]));
-        sqlGetter.setString(new MysqlValue("CREDIT_SCORE", player.getUniqueId(), 0));
+        sqlGetter.setString(new MysqlValue("CREDIT_SCORE", player.getUniqueId(), getCreditScore(player)));
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         String formattedDate = currentDate.format(formatter);
@@ -369,14 +374,15 @@ public class GamePlayerBank extends MySQL {
     }
 
     public void addCreditScore(OfflinePlayer offlinePlayer, int i) {
-        if(!(Integer.parseInt(getCreditScore(offlinePlayer)) >= 3500)) {
+        if (!(Integer.parseInt(getCreditScore(offlinePlayer)) >= 3500)) {
             int x = Integer.parseInt(getCreditScore(offlinePlayer)) + i;
             sqlGetter.setString(new MysqlValue("CREDIT_SCORE", offlinePlayer.getUniqueId(), "" + x));
+            GamePlayerCreditCard.updateCard(new GamePlayerCreditCard(offlinePlayer, getCreditCardNumber(offlinePlayer), getCreditCardCVS(offlinePlayer), getCreditScore(offlinePlayer), getCreditCardDOC(offlinePlayer)));
         }
     }
 
     public void removeCreditScore(OfflinePlayer offlinePlayer, int i) {
-        if(!(Integer.parseInt(getCreditScore(offlinePlayer)) <= 0)) {
+        if (!(Integer.parseInt(getCreditScore(offlinePlayer)) <= 0)) {
             int x = Integer.parseInt(getCreditScore(offlinePlayer)) - i;
             sqlGetter.setString(new MysqlValue("CREDIT_SCORE", offlinePlayer.getUniqueId(), "" + x));
         }
@@ -419,16 +425,16 @@ public class GamePlayerBank extends MySQL {
             s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " +" + i;
         } else if (Objects.equals(type.getLore(), "Withdraw")) {
             s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " -" + i;
-        } else if (Objects.equals(type.getLore(), "PayedLoan")){
-            if(i == 0) {
+        } else if (Objects.equals(type.getLore(), "PayedLoan")) {
+            if (i == 0) {
                 s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " FINISHED_LOAN";
             } else {
                 s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " -" + i;
             }
-        } else if (Objects.equals(type.getLore(), "Loan")){
-            s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() +  " +"  + i;
-        } else if (Objects.equals(type.getLore(), "Reset")){
-            s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() +  " RESET_CARD";
+        } else if (Objects.equals(type.getLore(), "Loan")) {
+            s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " +" + i;
+        } else if (Objects.equals(type.getLore(), "Reset")) {
+            s = "[" + dtf.format(now) + "]" + " Transaction: " + offlinePlayer.getName() + " " + type.getLore() + " RESET_CARD";
         }
         List<String> x = new ArrayList<>();
         if (getTransactions(offlinePlayer) != null) {

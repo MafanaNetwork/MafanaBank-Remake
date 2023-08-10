@@ -1,5 +1,6 @@
 package me.tahacheji.mafananetwork.gui;
 
+import me.TahaCheji.MafanaMarket;
 import me.tahacheji.mafananetwork.util.NBTUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -64,7 +65,8 @@ public class LoanGUI {
         if(itemStacks != null) {
             infoLore.add(ChatColor.GOLD + "Item Value Amount: ");
             for(ItemStack itemStack : itemStacks) {
-                infoLore.add(ChatColor.DARK_GRAY + "-" + itemStack.getItemMeta().getDisplayName() + " $VALUE x " + itemStack.getAmount());
+                int x = MafanaMarket.getInstance().getListingData().getAveragePrice(itemStack);
+                infoLore.add(ChatColor.DARK_GRAY + "-" + itemStack.getItemMeta().getDisplayName() + " $" +x + " x" + itemStack.getAmount());
             }
             infoLore.add("");
             infoLore.add("The item value must > or = to the loan amount-");

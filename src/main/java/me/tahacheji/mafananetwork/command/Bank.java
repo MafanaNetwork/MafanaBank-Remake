@@ -2,6 +2,7 @@ package me.tahacheji.mafananetwork.command;
 
 import me.tahacheji.mafananetwork.MafanaBank;
 import me.tahacheji.mafananetwork.data.GamePlayerCreditCard;
+import me.tahacheji.mafananetwork.gui.BankGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandExecutor;
@@ -13,8 +14,12 @@ public class Bank implements CommandExecutor {
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command cmd, String label, String[] args) {
         if (label.equalsIgnoreCase("Bank")) {
             Player player = (Player) sender;
-            if (args.length == 0) {
-                player.sendMessage(ChatColor.RED + "MafanaBank ERROR: /Bank [[Balance {player_name}],Transactions,LoanDept,[Card {new}]]");
+            if(args.length == 0) {
+                new BankGUI().openBankMenu(player);
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("info")) {
+                player.sendMessage(ChatColor.RED + "MafanaBank: /Bank [[Balance {player_name}],Transactions,LoanDept,[Card {new}]]");
                 return true;
             }
             if (args[0].equalsIgnoreCase("Balance")) {

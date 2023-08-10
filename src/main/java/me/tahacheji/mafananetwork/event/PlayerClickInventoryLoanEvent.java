@@ -1,6 +1,7 @@
 package me.tahacheji.mafananetwork.event;
 
 import de.tr7zw.nbtapi.NBTItem;
+import me.TahaCheji.MafanaMarket;
 import me.tahacheji.mafananetwork.MafanaBank;
 import me.tahacheji.mafananetwork.command.Loan;
 import me.tahacheji.mafananetwork.data.TransactionType;
@@ -59,12 +60,20 @@ public class PlayerClickInventoryLoanEvent implements Listener {
         if(new NBTItem(itemStack).hasTag("NONCLICKABLE")) {
             event.setCancelled(true);
             if(itemStack.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GOLD + "Confirm Loan")) {
-                MafanaBank.getInstance().getGamePlayerBank().setLoanAmount(player, new NBTItem(itemStack).getInteger("LoanAmount"));
+                int i = (new NBTItem(itemStack).getInteger("LoanAmount") * 10) / 100;
+                int x = i + new NBTItem(itemStack).getInteger("LoanAmount");
+                MafanaBank.getInstance().getGamePlayerBank().setLoanAmount(player, x);
                 MafanaBank.getInstance().getGamePlayerBank().setLoanDays(player, 240);
                 MafanaBank.getInstance().getGamePlayerBank().setCollateral(player, getItems(player));
+                MafanaBank.getInstance().getGamePlayerCoins().addCoins(player, new NBTItem(itemStack).getInteger("LoanAmount"));
                 player.sendMessage(ChatColor.GOLD + "MafanaBank: " + ChatColor.WHITE + "Loan confirmed you have 240 ingame days to pay it back.");
                 MafanaBank.getInstance().getGamePlayerBank().addTransaction(player, new NBTItem(itemStack).getInteger("LoanAmount"), TransactionType.LOAN);
-                return;
+                for (int slot = 0; slot <= 26; slot++) {
+                    if (event.getInventory().getItem(slot) != null) {
+                        event.getInventory().setItem(slot, null);
+                    }
+                }
+                player.closeInventory();
             }
         }
     }
@@ -87,12 +96,18 @@ public class PlayerClickInventoryLoanEvent implements Listener {
     private void checkInventory(Player player) {
         Inventory inventory = player.getOpenInventory().getTopInventory();
         List<ItemStack> i = new ArrayList<>();
+        int x = 0;
         for (int slot = 0; slot <= 26; slot++) {
             if (inventory.getItem(slot) != null) {
-                int x;
                 i.add(inventory.getItem(slot));
+                x = x + MafanaMarket.getInstance().getListingData().getAveragePrice(inventory.getItem(slot));
                 //run threw all the items and add up the value here then update the Loan info itemstack and if it is good then set slot 40 to getAcceptIngot
             }
+        }
+        if(x >= new NBTItem(inventory.getItem(40)).getInteger("LoanAmount")) {
+            inventory.setItem(49, LoanGUI.getAcceptIngot(new NBTItem(inventory.getItem(40)).getInteger("LoanAmount"), player));
+        } else {
+            inventory.setItem(49, null);
         }
         inventory.setItem(40, LoanGUI.getLoanInfo(new NBTItem(inventory.getItem(40)).getInteger("LoanAmount"), player, i));
     }

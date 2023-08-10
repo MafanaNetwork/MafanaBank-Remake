@@ -1,5 +1,6 @@
 package me.tahacheji.mafananetwork.event;
 
+import me.TahaCheji.MafanaMarket;
 import me.TahaCheji.event.MSNextDayEvent;
 import me.TahaCheji.event.MSNextSeasonEvent;
 import me.tahacheji.mafananetwork.MafanaBank;
@@ -8,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 import java.sql.SQLException;
 
@@ -18,7 +20,11 @@ public class PlayerNextLoanDayEvent implements Listener {
         GamePlayerBank playerBank = MafanaBank.getInstance().getGamePlayerBank();
         for (Player player : playerBank.getAllPlayersWithLoans()) {
             if(playerBank.getLoanDays(player) <= 0) {
-                //sell the collate items in MafanaMarket
+                for(ItemStack itemStack : MafanaBank.getInstance().getGamePlayerBank().getCollateral(player)) {
+                    MafanaMarket.getInstance().getListingData().saveAdminListing(itemStack);
+                    MafanaBank.getInstance().getGamePlayerBank().removeCollateral(player, itemStack);
+                }
+
                 playerBank.setLoanAmount(player, 0);
                 playerBank.setLoanDays(player, 0);
                 playerBank.removeCreditScore(player, 500);

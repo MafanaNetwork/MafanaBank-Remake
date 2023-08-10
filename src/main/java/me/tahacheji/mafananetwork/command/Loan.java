@@ -17,8 +17,8 @@ public class Loan implements CommandExecutor {
                 player.sendMessage(ChatColor.RED + "MafanaBank ERROR: /Loan [amount]");
                 return true;
             }
-            if(args[1].equalsIgnoreCase("Pay")) {
-                int coins = Integer.parseInt(args[2]);
+            if(args[0].equalsIgnoreCase("Pay")) {
+                int coins = Integer.parseInt(args[1]);
                 if(coins > MafanaBank.getInstance().getGamePlayerCoins().getCoins(player)) {
                     player.sendMessage(ChatColor.RED + "MafanaBank ERROR: You do not have that amount of coins in your bag");
                     return true;
@@ -27,7 +27,7 @@ public class Loan implements CommandExecutor {
                 MafanaBank.getInstance().getGamePlayerCoins().removeCoins(player, coins);
                 return true;
             } else {
-                int coins = Integer.parseInt(args[1]);
+                int coins = Integer.parseInt(args[0]);
                 if (coins > (25000 * Integer.parseInt(MafanaBank.getInstance().getGamePlayerBank().getCreditScore(player)) / 1250)) {
                     player.sendMessage(ChatColor.GOLD + "MafanaBank: " + ChatColor.WHITE + "You can only get a loan lower then $" + 25000 * Integer.parseInt(MafanaBank.getInstance().getGamePlayerBank().getCreditScore(player)) / 1250);
                     return true;
