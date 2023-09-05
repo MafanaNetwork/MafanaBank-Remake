@@ -6,6 +6,7 @@ import me.tahacheji.mafananetwork.data.GamePlayerCoins;
 import me.tahacheji.mafananetwork.event.PlayerClickInventoryLoanEvent;
 import me.tahacheji.mafananetwork.event.PlayerJoinServerEvent;
 import me.tahacheji.mafananetwork.event.PlayerNextLoanDayEvent;
+import me.tahacheji.mafananetwork.event.PlayerRightClickCoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MafanaBank extends JavaPlugin {
@@ -21,6 +22,7 @@ public final class MafanaBank extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinServerEvent(),  this);
         getServer().getPluginManager().registerEvents(new PlayerClickInventoryLoanEvent(),  this);
         getServer().getPluginManager().registerEvents(new PlayerNextLoanDayEvent(),  this);
+        getServer().getPluginManager().registerEvents(new PlayerRightClickCoinEvent(),  this);
         getCommand("Deposit").setExecutor(new Deposit());
         getCommand("Bank").setExecutor(new Bank());
         getCommand("Loan").setExecutor(new Loan());

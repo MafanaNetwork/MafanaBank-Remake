@@ -1,10 +1,12 @@
 package me.tahacheji.mafananetwork.command;
 
+import dev.triumphteam.gui.builder.item.ItemBuilder;
 import me.tahacheji.mafananetwork.MafanaBank;
 import me.tahacheji.mafananetwork.data.GamePlayerCreditCard;
 import me.tahacheji.mafananetwork.gui.BankGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -21,6 +23,19 @@ public class Bank implements CommandExecutor {
             if (args[0].equalsIgnoreCase("info")) {
                 player.sendMessage(ChatColor.RED + "MafanaBank: /Bank [[Balance {player_name}],Transactions,LoanDept,[Card {new}]]");
                 return true;
+            }
+            if(args[0].equalsIgnoreCase("convert")) {
+                if(args.length == 2) {
+                    int x = Integer.parseInt(args[1]);
+                    if(x <= MafanaBank.getInstance().getGamePlayerCoins().getCoins(player)) {
+                        MafanaBank.getInstance().getGamePlayerCoins().removeCoins(player, x);
+                        player.getInventory().addItem(ItemBuilder.from(Material.GOLD_NUGGET).setName(ChatColor.YELLOW + "" + x + " Coins")
+                                .setLore(ChatColor.DARK_GRAY + "--------------------------",ChatColor.GOLD + "Right Click To Claim Coins", ChatColor.DARK_GRAY + "--------------------------")
+                                .setNbt("MBC", "" + x).build());
+                    } else {
+                        player.sendMessage(ChatColor.RED + "MafanaBank: FUNDS_ERROR");
+                    }
+                }
             }
             if (args[0].equalsIgnoreCase("Balance")) {
                 if (args.length == 2) {
